@@ -1,0 +1,58 @@
+require 'highline/import'
+require 'fileutils'
+require 'erb'
+require 'ostruct'
+
+
+ROOT_PTH = Dir.basename(__FILE__)
+CONFIG_NAME = 'config.yml'
+
+
+class ErbBinding < OpenStruct
+  def get_binding
+    binding()
+  end
+end
+
+def load_config
+  begin
+    YAML::load(File.open(ROOT_PTH.join(CONFIG_NAME)))
+  rescue
+    nil
+  end
+end
+
+def compile_erb
+  config = load_config
+  if config.nil?
+    puts "Cannot load the configuration file: #{CONFIG_NAME}"
+    puts 'Compiling aborted'
+  else
+    Dir[ROOT_PTH.join('**', '*.erb')].each do |file_pth|
+      renderer =ERB.new(File.open(file_pth, 'r') { |f| f.read })
+      out_cntn = renderer.result(ErbBinding.new(config).send(:get_binding))
+      out_file_pth = file_pth.sub('.source', '').sub('.erb', '')
+      File.open(out_file_pth, 'w') { |f| f.write(out_cntn) }
+    end
+  end
+end
+
+
+desc 'Compile the sources'
+task :compile do
+  status = compile_erb
+  # TODO compile the other files
+  puts "#{status ? 'Successfully compiled' : 'Failed to compile'} the sources"
+end
+
+desc 'Cleanup the compiled website'
+task :cleanup do
+  compiled_files_pths = Dir[ROOT_PTH.join('**')].delete_if do |file_pth|
+    file_pth =~ /LICENSE\.md|README\.md|\.gitignore|\.idea|.*\.iml|\.source/
+  end
+  if agree("Remove these files?\n[#{compiled_files_pths.join(', ')}]")
+    compiled_files_pths.each { |file_pth| FileUtils.rm_r(file_pth) }
+  else
+    puts 'Nothing done'
+  end
+end
