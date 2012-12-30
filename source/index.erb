@@ -5,11 +5,14 @@
 <!--[if gt IE 8]><!--> <html class="en"> <!--<![endif]-->
 
   <head>
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title><%= title %></title>
-    <meta name="author" content="<%= author.name %>">
-    <meta name="description" content="<%= description %>">
+
+    <title><%= v[:title] %></title>
+
+    <meta name="author" content="<%= v[:author][:name] %>">
+    <meta name="description" content="<%= v[:description] %>">
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <script data-main="scripts/app.js" src="scripts/lib/require.js"></script>
@@ -17,13 +20,21 @@
     <link rel="stylesheet" href="styles/app.css">
 
     <link rel="shortcut icon" href="images/icons/favicon.ico">
-    <link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="images/icons/apple-touch-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="images/icons/apple-touch-icon-114x114.png">
+
+    <% if v[:root_pth].join('images/icons/apple-touch-icon.png').exist? %>
+      <%= '<link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">' %>
+    <% end %>
+    <% if v[:root_pth].join('images/icons/apple-touch-icon-72x72.png').exist? %>
+      <%= '<link rel="apple-touch-icon" sizes="72x72" href="images/icons/apple-touch-icon-72x72.png">' %>
+    <% end %>
+    <% if v[:root_pth].join('images/icons/apple-touch-icon-114x114.png').exist? %>
+      <%= '<link rel="apple-touch-icon" sizes="114x114" href="images/icons/apple-touch-icon-114x114.png">' %>
+    <% end %>
 
   </head>
 
   <body>
+
     <!--[if lt IE 7]>
       <p class="chromeframe">
         You are using an <strong>outdated</strong> browser.
@@ -34,21 +45,22 @@
 
     <div class="header-container">
       <header class="wrapper clearfix">
-
+        <%= Tilt.new(v[:root_pth].join('markup', 'header.erb')).render(self, :v => v) %>
       </header>
     </div>
 
     <div class="main-container">
       <div class="main wrapper clearfix">
-
+        <%= Tilt.new(v[:root_pth].join('markup', 'main.erb')).render(self, :v => v) %>
       </div>
     </div>
 
     <div class="footer-container">
       <footer class="wrapper">
-
+        <%= Tilt.new(v[:root_pth].join('markup', 'footer.erb')).render(self, :v => v) %>
       </footer>
     </div>
 
   </body>
+
 </html>

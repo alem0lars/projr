@@ -1,0 +1,25 @@
+source :rubygems
+
+gem 'rake'
+gem 'highline'
+gem 'awesome_print'
+
+group :markup do
+  gem 'RedCloth', :require => 'redcloth'
+  gem 'haml'
+  gem 'erubis'
+  gem 'liquid'
+  gem 'rdiscount'
+end
+
+group :styles do
+  gem 'sass'
+  gem 'less'
+end
+
+group :scripts do
+  gem 'therubyracer'
+  gem 'coffee-script'
+end
+
+gem 'tilt'

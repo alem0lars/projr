@@ -1,0 +1,132 @@
+require 'fileutils'
+require 'pathname'
+require 'ostruct'
+require 'highline/import'
+
+require 'erubis'
+require 'haml'
+require 'liquid'
+require 'redcloth'
+require 'rdoc'
+require 'rdoc/markup'
+require 'rdoc/markup/to_html'
+require 'rdiscount'
+require 'less'
+require 'coffee_script'
+require 'tilt'
+require 'awesome_print'
+
+
+ROOT_PTH = Pathname.new File.dirname(__FILE__)
+CONFIG_NAME = 'config.yml'
+OUT_PTH = ROOT_PTH.dirname
+
+
+# { Support methods / classes
+
+def load_config
+  begin
+    config = YAML::load(File.open(ROOT_PTH.join(CONFIG_NAME), 'r'))
+    config[:root_pth] = ROOT_PTH
+    config.inject({}){|memo,(k,v)| memo[k.to_sym] = v; memo}
+  rescue
+    nil
+  end
+end
+
+def compile_templates
+  markup_regex = /^.+(\.(?:erb|rhtml|erubis|haml|liquid|markdown|mkd|md|textile|rdoc))$/
+  markup_plain_regex = /^.+(\.(?:html|xhtml|htm|xml))$/
+  styles_sass_regex = /^.+(\.(?:sass|scss))$/
+  styles_less_regex = /^.+(\.less)$/
+  styles_plain_regex = /^.+(\.css)$/
+  scripts_coffee_regex = /^.+(\.coffee)$/
+  scripts_plain_regex = /^.+(\.js)$/
+
+  config = load_config
+  if config.nil?
+    puts "Cannot load the configuration file: #{CONFIG_NAME}"
+    puts 'Compiling aborted'
+  else
+    Dir[ROOT_PTH.join('**')].each do |file_pth|
+      out_file_pth = file_pth.sub(/^#{ROOT_PTH}/, OUT_PTH.to_s)
+
+      if (md = markup_regex.match(file_pth))                            # MARKUP
+        out_file_pth.sub!(md[1], '.html')
+        puts "Compiling #{file_pth} into #{out_file_pth}"
+
+        out_cntn = Tilt.new(file_pth).render(self, :v => config)
+        File.open(out_file_pth, 'w') { |out_file| out_file.write(out_cntn) }
+
+      elsif (md = markup_plain_regex.match(file_pth))           # (plain) MARKUP
+        out_file_pth.sub!(md[1], '.html')
+        puts "Compiling #{file_pth} into #{out_file_pth}"
+
+        FileUtils.cp(file_pth, out_file_pth, :verbose => true)
+
+      elsif (md = styles_sass_regex.match(file_pth))                      # SASS
+        out_file_pth.sub!(md[1], '.css')
+        puts "Compiling #{file_pth} into #{out_file_pth}"
+
+        system("sass #{file_pth} #{out_file_pth}"); $?.success?
+
+      elsif (md = styles_less_regex.match(file_pth))                      # LESS
+        out_file_pth.sub!(md[1], '.css')
+        puts "Compiling #{file_pth} into #{out_file_pth}"
+
+        tree = Less::Parser.new.parse(File.open(file_pth, 'r') {|f| f.read})
+        File.open(out_file_pth, 'w') { |out_file| out_file.write(tree.to_css) }
+
+      elsif styles_plain_regex.match(file_pth)                     # (plain) CSS
+        out_file_pth.sub!(md[1], '.css')
+        puts "Compiling #{file_pth} into #{out_file_pth}"
+
+        FileUtils.cp(file_pth, out_file_pth, :verbose => true)
+
+      elsif file_pth =~ scripts_coffee_regex                      # COFFEESCRIPT
+        out_file_pth.sub!(md[1], '.js')
+        puts "Compiling #{file_pth} into #{out_file_pth}"
+
+        File.open(out_file_pth, 'w') do |out_file|
+          out_file.write(CoffeeScript.compile(File.read(file_pth)))
+        end
+
+      elsif scripts_plain_regex.match(file_pth)                     # (plain) JS
+        out_file_pth.sub!(md[1], '.js')
+        puts "Compiling #{file_pth} into #{out_file_pth}"
+
+        FileUtils.cp(file_pth, out_file_pth, :verbose => true)
+      end
+
+    end
+  end
+end
+
+# }
+
+# { Tasks
+
+desc 'Preview the website'
+task :preview => [:cleanup, :compile] do
+  system "xdg-open #{OUT_PTH.join('index.html')}"
+end
+
+desc 'Compile the sources'
+task :compile do
+  status = compile_templates
+  puts "#{status ? 'Successfully compiled' : 'Failed to compile'} the sources"
+end
+
+desc 'Cleanup the compiled website'
+task :cleanup do
+  compiled_files_pths = Dir[OUT_PTH.join('**')].delete_if do |file_pth|
+    file_pth =~ /LICENSE\.md|README\.md|#{ROOT_PTH}/
+  end
+  unless compiled_files_pths.empty?
+    if agree("Remove these files?\n[ #{compiled_files_pths.join(', ')} ]")
+      compiled_files_pths.each { |file_pth| FileUtils.rm_r(file_pth) }
+    end
+  end
+end
+
+# }
