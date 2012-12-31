@@ -11,14 +11,24 @@ require 'rdoc'
 require 'rdoc/markup'
 require 'rdoc/markup/to_html'
 require 'rdiscount'
+require 'sass'
 require 'less'
 require 'coffee_script'
 require 'tilt'
 require 'awesome_print'
 
 
-ROOT_PTH = Pathname.new File.dirname(__FILE__)
+MARKUP_NAME = 'markup'
+SCRIPTS_NAME = 'scripts'
+STYLES_NAME = 'styles'
+IMAGES_NAME = 'images'
 CONFIG_NAME = 'config.yml'
+
+ROOT_PTH = Pathname.new File.dirname(__FILE__)
+MARKUP_PTH = ROOT_PTH.join(MARKUP_NAME)
+SCRIPTS_PTH = ROOT_PTH.join(SCRIPTS_NAME)
+STYLES_PTH = ROOT_PTH.join(STYLES_NAME)
+IMAGES_PTH = ROOT_PTH.join(IMAGES_NAME)
 OUT_PTH = ROOT_PTH.dirname
 
 
@@ -27,77 +37,100 @@ OUT_PTH = ROOT_PTH.dirname
 def load_config
   begin
     config = YAML::load(File.open(ROOT_PTH.join(CONFIG_NAME), 'r'))
-    config[:root_pth] = ROOT_PTH
+    config.merge!({
+      :markup_name => MARKUP_NAME,
+      :scripts_name => SCRIPTS_NAME,
+      :styles_name => STYLES_NAME,
+      :images_name => IMAGES_NAME,
+      :root_pth => ROOT_PTH,
+      :markup_pth => MARKUP_PTH,
+      :scripts_pth => SCRIPTS_PTH,
+      :styles_pth => STYLES_PTH,
+      :images_pth => IMAGES_PTH
+    })
     config.inject({}){|memo,(k,v)| memo[k.to_sym] = v; memo}
   rescue
     nil
   end
 end
 
-def compile_templates
-  markup_regex = /^.+(\.(?:erb|rhtml|erubis|haml|liquid|markdown|mkd|md|textile|rdoc))$/
-  markup_plain_regex = /^.+(\.(?:html|xhtml|htm|xml))$/
-  styles_sass_regex = /^.+(\.(?:sass|scss))$/
-  styles_less_regex = /^.+(\.less)$/
-  styles_plain_regex = /^.+(\.css)$/
-  scripts_coffee_regex = /^.+(\.coffee)$/
-  scripts_plain_regex = /^.+(\.js)$/
+def get_from_templ(pth, config)
+  begin
+    Tilt.new(pth.to_s).render(self, :v => config)
+  rescue Exception => exc
+    raise "Error while getting content from template #{pth}\n"\
+        "\tReason: #{exc.message}\n\t#{exc.backtrace.join("\n\t")}"
+  end
+end
 
+def compile_files
   config = load_config
   if config.nil?
     puts "Cannot load the configuration file: #{CONFIG_NAME}"
     puts 'Compiling aborted'
-  else
-    Dir[ROOT_PTH.join('**')].each do |file_pth|
-      out_file_pth = file_pth.sub(/^#{ROOT_PTH}/, OUT_PTH.to_s)
+    return false
+  end
 
-      if (md = markup_regex.match(file_pth))                            # MARKUP
-        out_file_pth.sub!(md[1], '.html')
-        puts "Compiling #{file_pth} into #{out_file_pth}"
-
-        out_cntn = Tilt.new(file_pth).render(self, :v => config)
-        File.open(out_file_pth, 'w') { |out_file| out_file.write(out_cntn) }
-
-      elsif (md = markup_plain_regex.match(file_pth))           # (plain) MARKUP
-        out_file_pth.sub!(md[1], '.html')
-        puts "Compiling #{file_pth} into #{out_file_pth}"
-
-        FileUtils.cp(file_pth, out_file_pth, :verbose => true)
-
-      elsif (md = styles_sass_regex.match(file_pth))                      # SASS
-        out_file_pth.sub!(md[1], '.css')
-        puts "Compiling #{file_pth} into #{out_file_pth}"
-
-        system("sass #{file_pth} #{out_file_pth}"); $?.success?
-
-      elsif (md = styles_less_regex.match(file_pth))                      # LESS
-        out_file_pth.sub!(md[1], '.css')
-        puts "Compiling #{file_pth} into #{out_file_pth}"
-
-        tree = Less::Parser.new.parse(File.open(file_pth, 'r') {|f| f.read})
-        File.open(out_file_pth, 'w') { |out_file| out_file.write(tree.to_css) }
-
-      elsif styles_plain_regex.match(file_pth)                     # (plain) CSS
-        out_file_pth.sub!(md[1], '.css')
-        puts "Compiling #{file_pth} into #{out_file_pth}"
-
-        FileUtils.cp(file_pth, out_file_pth, :verbose => true)
-
-      elsif file_pth =~ scripts_coffee_regex                      # COFFEESCRIPT
-        out_file_pth.sub!(md[1], '.js')
-        puts "Compiling #{file_pth} into #{out_file_pth}"
-
-        File.open(out_file_pth, 'w') do |out_file|
-          out_file.write(CoffeeScript.compile(File.read(file_pth)))
+  compile_data = [
+    { :regex => /^.+(\.(?:erb|rhtml|erubis|haml|liquid|markdown|mkd|md|textile|rdoc))$/,
+      :out_ext => lambda { |ext| '.html' },
+      :behaviour => lambda { |md, fp| Tilt.new(fp).render(self, :v => config) }
+    },
+    { :regex => /^.+(\.(?:html|xhtml|htm|xml))$/,
+      :out_ext => lambda { |ext| '.html' },
+      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
+    },
+    { :regex => /^.+(\.(?:sass|scss))$/,
+      :out_ext => lambda { |ext| '.css' },
+      :behaviour => lambda { |md, fp|
+        Dir.chdir(STYLES_PTH) do
+          Sass::Engine.new(File.open(fp, 'r') { |f| f.read }).render
         end
+      }
+    },
+    { :regex => /^.+(\.less)$/,
+      :out_ext => lambda { |ext| '.css' },
+      :behaviour => lambda { |md, fp|
+        Dir.chdir(STYLES_PTH) do
+          Less::Parser.new.parse(File.open(fp, 'r') { |f| f.read }).to_css
+        end
+      }
+    },
+    { :regex => /^.+(\.css)$/,
+      :out_ext => lambda { |ext| '.css' },
+      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
+    },
+    { :regex => /^.+(\.(?:coffee|coffeescript))$/,
+      :out_ext => lambda { |ext| '.js' },
+      :behaviour => lambda { |md, fp|
+        CoffeeScript.compile(File.open(fp, 'r') { |f| f.read })
+      }
+    },
+    { :regex => /^.+(\.(?:js|javascript))$/,
+      :out_ext => lambda { |ext| '.js' },
+      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
+    },
+    { :regex => /^.+(\.(?:png|svg|jpeg|jpg|gif|eot|ttf|woff))$/,
+      :out_ext => lambda { |ext| ext },
+      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
+    }
+  ]
 
-      elsif scripts_plain_regex.match(file_pth)                     # (plain) JS
-        out_file_pth.sub!(md[1], '.js')
+  Dir[ROOT_PTH.join('**', '*')].each do |file_pth|
+    out_file_pth = file_pth.sub(/^#{ROOT_PTH}/, OUT_PTH.to_s)
+
+    found = false
+    compile_data.each do |e|
+      if (md = e[:regex].match(out_file_pth)) && !found
+        found = true
+        out_file_pth.sub!(md[1], e[:out_ext].call(md[1]))
         puts "Compiling #{file_pth} into #{out_file_pth}"
-
-        FileUtils.cp(file_pth, out_file_pth, :verbose => true)
+        FileUtils.makedirs(File.dirname(out_file_pth))
+        out_file_cntn = e[:behaviour].call(md, file_pth)
+        unless out_file_cntn.nil?
+          File.open(out_file_pth, 'w') { |out_f| out_f.write(out_file_cntn) }
+        end
       end
-
     end
   end
 end
@@ -113,7 +146,7 @@ end
 
 desc 'Compile the sources'
 task :compile do
-  status = compile_templates
+  status = compile_files
   puts "#{status ? 'Successfully compiled' : 'Failed to compile'} the sources"
 end
 

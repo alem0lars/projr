@@ -1,12 +1,25 @@
-$(function() {
-  $('#navigation').find('a').stop().animate({'marginLeft':'-85px'},1000);
+function hide($selector, time) {
+  $selector.stop().animate({'marginLeft':'-240px'}, time, function() {
+    $('.nav-elem-open').hide();
+    $('.nav-elem-close').show();
+  });
+}
+function show($selector, time) {
+  $selector.stop().animate({'marginLeft':'-2px'}, time, function() {
+    $('.nav-elem-close').hide();
+    $('.nav-elem-open').show();
+  });
+}
 
-  $('#navigation').find('> li').hover(
-      function () {
-        $('a',$(this)).stop().animate({'marginLeft':'-2px'},200);
-      },
-      function () {
-        $('a',$(this)).stop().animate({'marginLeft':'-85px'},200);
-      }
+$(document).ready(function() {
+  hide($('.nav-elem'), 1000);
+
+  $('.nav-elem-wrp').hover(
+    function () {
+      show($('.nav-elem',$(this)), 200);
+    },
+    function () {
+      hide($('.nav-elem',$(this)), 200);
+    }
   );
 });

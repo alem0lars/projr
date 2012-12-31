@@ -17,18 +17,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <script data-main="scripts/app.js" src="scripts/lib/require.js"></script>
 
-    <link rel="stylesheet" href="styles/app.css">
+    <link rel="stylesheet" href="<%= v[:styles_name] %>/app.css">
 
-    <link rel="shortcut icon" href="images/icons/favicon.ico">
+    <link rel="shortcut icon" href="<%= v[:images_name] %>/icons/favicon.ico">
 
-    <% if v[:root_pth].join('images/icons/apple-touch-icon.png').exist? %>
-      <%= '<link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png">' %>
+    <% if v[:images_pth].join('icons', 'apple-touch-icon.png').exist? %>
+      <%= "<link rel=\"apple-touch-icon\" href=\"#{v[:images_name]}/icons/apple-touch-icon.png\">" %>
     <% end %>
-    <% if v[:root_pth].join('images/icons/apple-touch-icon-72x72.png').exist? %>
-      <%= '<link rel="apple-touch-icon" sizes="72x72" href="images/icons/apple-touch-icon-72x72.png">' %>
+    <% if v[:images_pth].join('icons', 'apple-touch-icon-72x72.png').exist? %>
+      <%= "<link rel=\"apple-touch-icon\" href=\"#{v[:images_name]}/icons/apple-touch-icon-72x72.png\">" %>
     <% end %>
-    <% if v[:root_pth].join('images/icons/apple-touch-icon-114x114.png').exist? %>
-      <%= '<link rel="apple-touch-icon" sizes="114x114" href="images/icons/apple-touch-icon-114x114.png">' %>
+    <% if v[:images_pth].join('icons', 'apple-touch-icon-114x114.png').exist? %>
+      <%= "<link rel=\"apple-touch-icon\" href=\"#{v[:images_name]}/icons/apple-touch-icon-114x114.png\">" %>
     <% end %>
 
   </head>
@@ -45,21 +45,23 @@
 
     <div class="header-container">
       <header class="wrapper clearfix">
-        <%= Tilt.new(v[:root_pth].join('markup', 'header.erb')).render(self, :v => v) %>
+        <%= get_from_templ(v[:markup_pth].join('header.erb'), v) %>
       </header>
     </div>
 
     <div class="main-container">
       <div class="main wrapper clearfix">
-        <%= Tilt.new(v[:root_pth].join('markup', 'main.erb')).render(self, :v => v) %>
+        <%= get_from_templ(v[:markup_pth].join('main.erb'), v) %>
       </div>
     </div>
 
     <div class="footer-container">
       <footer class="wrapper">
-        <%= Tilt.new(v[:root_pth].join('markup', 'footer.erb')).render(self, :v => v) %>
+        <%= get_from_templ(v[:markup_pth].join('footer.erb'), v) %>
       </footer>
     </div>
+
+    <%= get_from_templ(v[:markup_pth].join('navigation.erb'), v) %>
 
   </body>
 
