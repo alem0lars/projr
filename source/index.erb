@@ -43,25 +43,23 @@
         to improve your experience.</p>
     <![endif]-->
 
-    <div class="header-container">
-      <header class="wrapper clearfix">
+    <%= get_from_templ(v[:markup_pth].join('navigation.erb'), v) %>
+
+    <div class="container-fluid">
+
+      <header class="header-wrp row-fluid">
         <%= get_from_templ(v[:markup_pth].join('header.erb'), v) %>
       </header>
-    </div>
 
-    <div class="main-container">
-      <div class="main wrapper clearfix">
+      <div class="main-wrp row-fluid">
         <%= get_from_templ(v[:markup_pth].join('main.erb'), v) %>
       </div>
-    </div>
 
-    <div class="footer-container">
-      <footer class="wrapper">
+      <footer class="footer-wrp row-fluid">
         <%= get_from_templ(v[:markup_pth].join('footer.erb'), v) %>
       </footer>
-    </div>
 
-    <%= get_from_templ(v[:markup_pth].join('navigation.erb'), v) %>
+    </div>
 
   </body>
 

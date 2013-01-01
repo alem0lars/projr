@@ -9,9 +9,13 @@ requirejs.config({
   }
 });
 
-// Start the main app logic
-requirejs(['jquery', 'app/navigation'],
-  function   ($) {
-    // Required modules are all loaded and can be used here now
-  }
-);
+requirejs([
+  'domReady',
+  'jquery',
+  'bootstrap',
+
+  'app/header',
+  'app/main',
+  'app/footer',
+  'app/navigation'
+]);

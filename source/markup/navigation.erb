@@ -1,17 +1,51 @@
-<ul id="nav"> <!--  class="ca-menu" -->
+<% if v.has_key?(:nav) %>
+  <div id="nav" class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
 
-  <li class="nav-elem-wrp">
-    <a class="nav-elem" href="#">
-      <div class="nav-elem-open">
-        <span class="nav-elem-icon">I</span>
-        <h2 class="nav-elem-title">Creative Storyte</h2>
-        <div class="clear"></div>
-        <h3 class="nav-elem-subtitle">Advanced use of technology</h3>
-      </div>
-      <div class="nav-elem-close">
-        <span class="nav-elem-icon">I</span>
-      </div>
-    </a>
-  </li>
+        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
 
-</ul>
+        <a class="brand" href="#"><%= v[:title] %></a>
+
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+
+            <li class="active"><a href="index.html">Home</a></li>
+
+            <% if v[:nav].has_key?(:elems) && !v[:nav][:elems].empty? %>
+              <% v[:nav][:elems].each do |elem| %>
+                <li><a href="<%= elem[:link] %>"><%= elem[:title] %></a></li>
+              <% end %>
+            <% end %>
+
+            <% if v[:nav].has_key?(:downloads) %>
+              <li class="dropdown">
+                <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+                  Downloads
+                  <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu">
+                  <% v[:nav][:downloads].each do |download| %>
+                    <li><a href="<%= download[:link] %>"><%= download[:title] %></a></li>
+                  <% end %>
+                </ul>
+              </li>
+            <% end %>
+
+          </ul>
+
+          <form class="navbar-search pull-right">
+            <input type="text" class="search-query" placeholder="Search">
+          </form>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<% end %>

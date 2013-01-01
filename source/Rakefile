@@ -32,7 +32,13 @@ IMAGES_PTH = ROOT_PTH.join(IMAGES_NAME)
 OUT_PTH = ROOT_PTH.dirname
 
 
-# { Support methods / classes
+# { Support methods & classes / Helper methods
+
+def symbolize(obj)
+  return obj.inject({}) { |memo, (k,v)| memo[k.to_sym] = symbolize(v); memo } if obj.is_a? Hash
+  return obj.inject([]) { |memo, v| memo << symbolize(v); memo } if obj.is_a? Array
+  obj
+end
 
 def load_config
   begin
@@ -48,7 +54,7 @@ def load_config
       :styles_pth => STYLES_PTH,
       :images_pth => IMAGES_PTH
     })
-    config.inject({}){|memo,(k,v)| memo[k.to_sym] = v; memo}
+    symbolize(config)
   rescue
     nil
   end
