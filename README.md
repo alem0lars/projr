@@ -1,7 +1,7 @@
-Static Website Skeleton
+Project Website Skeleton
 ===============================================================================
 ## Author
 * [Alessandro Molari](http://molarialessandro.info)
 
 ## Project Informations
-More informations @ [the project website](http://molarialessandro.info/static-website-skeleton)
+More informations @ [the project website](http://molarialessandro.info/project-website-skeleton)
