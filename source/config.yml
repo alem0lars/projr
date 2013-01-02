@@ -5,8 +5,8 @@ author:
 
 nav: # to disable the top navigation bar remove this entry
   elems: # to disable the links in the navbar remove this entry
-    - title: Basics
-      link: *learnmore
+    - title: Getting Started
+      link: getting_started.html
     - title: Details
       link: details.html
     - title: License
@@ -21,11 +21,13 @@ nav: # to disable the top navigation bar remove this entry
 
 project_name: Project Website Skeleton
 project_desc: Skeleton to create easily create new project websites with services integration
-learn_more: &learn_more learn_more.html
+index_main_button:
+  name: Getting Started
+  link: getting_started.html
 
 services:
-  maven: false # or: maven: <relative_pth_to_mvn_root_site>
-  github: # or: github: false
+  maven: false # or maven: <relative_pth_to_mvn_root_site>
+  github: # or github: false
     user_name: alem0lars
     repo_name: project-website-skeleton
   hubcap: false
@@ -33,3 +35,4 @@ services:
   asana: true
   gemnasium: true
   travis: true
+  twitter: alem0lars # or twitter: false

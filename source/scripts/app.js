@@ -6,6 +6,19 @@ requirejs.config({
   // extension since the paths config could be for a directory.
   paths: {
     app: '../app'
+  },
+
+  shim: {
+    'jquery': {
+      deps: [],
+      exports: 'jquery',
+      init: function (jquery) { /* No function init at the moment */ }
+    },
+    'bootstrap': {
+      deps: ['jquery'],
+      exports: 'bootstrap',
+      init: function (bootstrap) { /* No function init at the moment */ }
+    }
   }
 });
 
@@ -15,7 +28,8 @@ requirejs([
   'bootstrap',
 
   'app/header',
-  'app/main',
   'app/footer',
-  'app/navigation'
+  'app/navigation',
+
+  'app/index'
 ]);
