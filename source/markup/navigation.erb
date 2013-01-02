@@ -9,7 +9,7 @@
           <span class="icon-bar"></span>
         </a>
 
-        <a class="brand" href="#"><%= v[:title] %></a>
+        <a class="brand"><%= v[:title] %></a>
 
         <div class="nav-collapse collapse">
           <ul class="nav">
@@ -24,7 +24,7 @@
 
             <% if v[:nav].has_key?(:downloads) %>
               <li class="dropdown">
-                <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown">
                   Downloads
                   <b class="caret"></b>
                 </a>

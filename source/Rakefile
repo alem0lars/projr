@@ -78,9 +78,46 @@ def compile_files
   end
 
   compile_data = [
-    { :regex => /^.+(\.(?:erb|rhtml|erubis|haml|liquid|markdown|mkd|md|textile|rdoc))$/,
+    { :regex => /^.+(\.(?:erb|rhtml|erubis|haml|liquid|markdown|mkd|md|textile))$/,
       :out_ext => lambda { |ext| '.html' },
-      :behaviour => lambda { |md, fp| Tilt.new(fp).render(self, :v => config) }
+      :behaviour => lambda { |md, fp|
+        # find comment tags
+        oc, cc = if /\.haml/.match(md[1]); %w(# )
+        elsif /\.liquid/.match(md[1]); %w({% %})
+        elsif /\.textile/.match(md[1]); %w(==<!-- -->==)
+        else %w(<!-- -->)
+        end
+
+        if /^#{MARKUP_PTH}\/layouts\/.+$/.match(fp)
+          nil # skip the layouts generation
+        else
+          line = File.open(fp, 'r') { |f| f.readline } rescue ''
+          puts line.strip
+          layout_md = /^#{oc}\s*layout\s*:\s*(\S*)\s*#{cc}$/i.match(line.strip)
+          if layout_md.nil?
+            Tilt.new(fp).render(self, :v => config)
+          else
+            layout_name = layout_md[1]
+            layout_pth = File.join(MARKUP_PTH, 'layouts', layout_name)
+            if File.exist?(layout_pth)
+              out_lines = File.open(fp, 'r') { |f| f.readlines }
+              out_lines.delete_at(0)
+              out_cntn = out_lines.join('')
+              tmp_file = Tempfile.new(['template', md[1]])
+              tmp_file.write(out_cntn)
+              tmp_file_pth = tmp_file.path
+              tmp_file.close
+              out_cntn = Tilt.new(layout_pth).render(self, :v => config) {
+                Tilt.new(tmp_file_pth).render(self, :v => config)
+              }
+              tmp_file.unlink
+              out_cntn # return
+            else
+              Tilt.new(fp).render(self, :v => config)
+            end
+          end
+        end
+      }
     },
     { :regex => /^.+(\.(?:html|xhtml|htm|xml))$/,
       :out_ext => lambda { |ext| '.html' },
@@ -130,11 +167,16 @@ def compile_files
       if (md = e[:regex].match(out_file_pth)) && !found
         found = true
         out_file_pth.sub!(md[1], e[:out_ext].call(md[1]))
-        puts "Compiling #{file_pth} into #{out_file_pth}"
-        FileUtils.makedirs(File.dirname(out_file_pth))
-        out_file_cntn = e[:behaviour].call(md, file_pth)
-        unless out_file_cntn.nil?
-          File.open(out_file_pth, 'w') { |out_f| out_f.write(out_file_cntn) }
+        if (md2 = /^(#{OUT_PTH})\/#{MARKUP_NAME}\/pages\/(.+)$/.match(out_file_pth)) # TODO: move?
+          out_file_pth = File.join(md2[1], md2[2])
+        end
+        unless
+          puts "Compiling #{file_pth} into #{out_file_pth}"
+          FileUtils.makedirs(File.dirname(out_file_pth))
+          out_file_cntn = e[:behaviour].call(md, file_pth)
+          unless out_file_cntn.nil?
+            File.open(out_file_pth, 'w') { |out_f| out_f.write(out_file_cntn) }
+          end
         end
       end
     end
@@ -146,12 +188,12 @@ end
 # { Tasks
 
 desc 'Preview the website'
-task :preview => [:cleanup, :compile] do
+task :preview => :compile do
   system "xdg-open #{OUT_PTH.join('index.html')}"
 end
 
 desc 'Compile the sources'
-task :compile do
+task :compile => :cleanup do
   status = compile_files
   puts "#{status ? 'Successfully compiled' : 'Failed to compile'} the sources"
 end
