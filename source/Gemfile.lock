@@ -16,10 +16,13 @@ GEM
     less (2.2.2)
       commonjs (~> 0.2.6)
     liquid (2.4.1)
+    mime-types (1.19)
     multi_json (1.5.0)
     rake (10.0.3)
     rdiscount (1.6.8)
     ref (1.0.2)
+    rest-client (1.6.7)
+      mime-types (>= 1.16)
     sass (3.2.4)
     therubyracer (0.11.0)
       ref
@@ -39,6 +42,7 @@ DEPENDENCIES
   liquid
   rake
   rdiscount
+  rest-client
   sass
   therubyracer
   tilt

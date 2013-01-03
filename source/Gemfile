@@ -4,6 +4,10 @@ gem 'rake'
 gem 'highline'
 gem 'awesome_print'
 
+gem 'rest-client', :require => 'rest_client'
+
+gem 'tilt'
+
 group :markup do
   gem 'RedCloth', :require => 'redcloth'
   gem 'haml'
@@ -21,5 +25,3 @@ group :scripts do
   gem 'therubyracer'
   gem 'coffee-script'
 end
-
-gem 'tilt'

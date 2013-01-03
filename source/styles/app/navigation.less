@@ -1,12 +1,20 @@
-/* Add top padding for navbar-top-fixed */
-body {
-  padding-top: 60px;
-  padding-bottom: 40px;
+html, body {
+  height: 100%;
 }
 
-/* Remove top padding when top navbar goes static in narrow viewports */
+#container-wrp { // TODO: fix it goes too much bottom
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin: 80px auto -140px;
+}
+#push, #footer {
+  height: 60px;
+}
+
+/* Remove margin when navigation goes static in narrow viewports */
 @media (max-width: 979px) {
-  body {
-    padding-top: 0;
+  #container-wrp {
+    margin: 0 auto -60px;
   }
 }

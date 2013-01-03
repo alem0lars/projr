@@ -16,8 +16,10 @@ require 'less'
 require 'coffee_script'
 require 'tilt'
 require 'awesome_print'
+require 'rest_client'
 
 
+HELPERS_NAME = 'helpers'
 MARKUP_NAME = 'markup'
 PARTIALS_NAME = 'partials'
 LAYOUTS_NAME = 'layouts'
@@ -27,13 +29,17 @@ IMAGES_NAME = 'images'
 CONFIG_NAME = 'config.yml'
 
 ROOT_PTH = Pathname.new File.dirname(__FILE__)
+OUT_PTH = ROOT_PTH.dirname
+HELPERS_PTH = ROOT_PTH.join(HELPERS_NAME)
 MARKUP_PTH = ROOT_PTH.join(MARKUP_NAME)
 PARTIALS_PTH = MARKUP_PTH.join(PARTIALS_NAME)
 LAYOUTS_PTH = MARKUP_PTH.join(LAYOUTS_NAME)
 SCRIPTS_PTH = ROOT_PTH.join(SCRIPTS_NAME)
 STYLES_PTH = ROOT_PTH.join(STYLES_NAME)
 IMAGES_PTH = ROOT_PTH.join(IMAGES_NAME)
-OUT_PTH = ROOT_PTH.dirname
+
+# Load the helpers
+Dir.glob(HELPERS_PTH.join('**', '*.rb')) { |fp| require fp }
 
 
 # { Support methods & classes / Helper methods
@@ -65,20 +71,6 @@ def load_config
     symbolize(config)
   rescue
     nil
-  end
-end
-
-def github_link(config)
-  github = config[:services][:github]
-  "https://github.com/#{github[:user_name]}/#{github[:repo_name]}"
-end
-
-def get_from_templ(pth, config)
-  begin
-    Tilt.new(pth.to_s).render(self, :v => config)
-  rescue Exception => exc
-    raise "Error while getting content from template #{pth}\n"\
-        "\tReason: #{exc.message}\n\t#{exc.backtrace.join("\n\t")}"
   end
 end
 

@@ -21,6 +21,7 @@ nav: # to disable the top navigation bar remove this entry
 
 project_name: Project Website Skeleton
 project_desc: Skeleton to create easily create new project websites with services integration
+license: gplv2
 index_main_button:
   name: Getting Started
   link: getting_started.html
