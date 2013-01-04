@@ -1,7 +1,8 @@
-Project Website Skeleton
+Projr
 ===============================================================================
 ## Author
 * [Alessandro Molari](http://molarialessandro.info)
 
 ## Project Informations
-More informations @ [the project website](http://molarialessandro.info/project-website-skeleton)
+More informations @ [the project website](http://molarialessandro.info/projr)
+
