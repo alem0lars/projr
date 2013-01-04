@@ -9,3 +9,19 @@
 @import "app/footer";
 
 @import "app/index";
+
+
+html, body {
+  height: 100%;
+}
+
+#container-wrp {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin: 0 auto -@footer-height;
+}
+
+#push, #footer {
+  height: @footer-height;
+}

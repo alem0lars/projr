@@ -17,6 +17,8 @@ require 'coffee_script'
 require 'tilt'
 require 'awesome_print'
 require 'rest_client'
+require 'erector'
+Erector::Widget.prettyprint_default = true
 
 
 HELPERS_NAME = 'helpers'

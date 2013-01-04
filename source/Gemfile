@@ -6,7 +6,8 @@ gem 'awesome_print'
 
 gem 'rest-client', :require => 'rest_client'
 
-gem 'tilt'
+gem 'tilt' # used to compile the markup
+gem 'erector' # typically used in helpers
 
 group :markup do
   gem 'RedCloth', :require => 'redcloth'
