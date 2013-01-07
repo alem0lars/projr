@@ -41,8 +41,7 @@ services:
   maven: false # or maven: <relative_pth_to_mvn_root_site>
   github: # or github: false
     user_name: alem0lars
-    repo_name: project-website-skeleton
-  hubcap: false
+    repo_name: projr
   masterbranch: true
   asana: true
   gemnasium: true
