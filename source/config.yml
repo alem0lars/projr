@@ -1,7 +1,7 @@
-title: Website title
-description: Website description
+title: Projr Official Website
+description: Main reference for Projr
 author:
-  name: Author Name
+  name: Alessandro Molari
 
 nav: # to disable the top navigation bar remove this entry
   elems: # to disable the links in the navbar remove this entry
@@ -22,15 +22,15 @@ nav: # to disable the top navigation bar remove this entry
       category: Legal
       weight: 8
     - title: TAR
-      link: 'https://github.com/alem0lars/project-website-skeleton/tarball/master'
+      link: 'https://github.com/alem0lars/projr/tarball/master'
       category: Downloads
       weight: 4
     - title: ZIP
-      link: 'https://github.com/alem0lars/project-website-skeleton/zipball/master'
+      link: 'https://github.com/alem0lars/projr/zipball/master'
       category: Downloads
       weight: 4
 
-project_name: Project Website Skeleton
+project_name: Projr
 project_desc: Skeleton to create easily create new project websites with services integration
 license: gplv2
 index_main_button:
@@ -38,12 +38,15 @@ index_main_button:
   link: getting_started.html
 
 services:
-  maven: false # or maven: <relative_pth_to_mvn_root_site>
   github: # or github: false
     user_name: alem0lars
     repo_name: projr
-  masterbranch: true
-  asana: true
-  gemnasium: true
-  travis: true
+    travis: true
+    gemnasium: true
+  masterbranch:
+    user_name: alem0lars
+    badge_type: prof_short # or: cv_long, prof_short, prof_long, resume_short, resume_long
+
+  # TODO
+  maven: false # or maven: <relative_pth_to_mvn_root_site>
   twitter: alem0lars # or twitter: false

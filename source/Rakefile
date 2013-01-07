@@ -18,7 +18,10 @@ require 'tilt'
 require 'awesome_print'
 require 'rest_client'
 require 'erector'
+include Erector::Mixin
 Erector::Widget.prettyprint_default = true
+
+$:.push(File.dirname(__FILE__))
 
 
 HELPERS_NAME = 'helpers'
@@ -41,7 +44,7 @@ STYLES_PTH = ROOT_PTH.join(STYLES_NAME)
 IMAGES_PTH = ROOT_PTH.join(IMAGES_NAME)
 
 # Load the helpers
-Dir.glob(HELPERS_PTH.join('**', '*.rb')) { |fp| require fp }
+Dir.glob(HELPERS_PTH.join('*.rb')) { |fp| require fp }
 
 
 # { Support methods & classes / Helper methods
@@ -54,8 +57,8 @@ end
 
 def load_config
   begin
-    config = YAML::load(File.open(ROOT_PTH.join(CONFIG_NAME), 'r'))
-    config.merge!({
+    $config = YAML::load(File.open(ROOT_PTH.join(CONFIG_NAME), 'r'))
+    $config.merge!({
       :markup_name => MARKUP_NAME,
       :partials_name => PARTIALS_NAME,
       :layouts_name => LAYOUTS_NAME,
@@ -70,16 +73,30 @@ def load_config
       :styles_pth => STYLES_PTH,
       :images_pth => IMAGES_PTH
     })
-    symbolize(config)
+
+    $config = symbolize($config)
+
+    unless $config.has_key?(:title)
+      $config[:title] = $config[:project_name]
+    end
+    unless $config.has_key?(:description)
+      $config[:description] = $config[:project_desc]
+    end
+
+    is_valid, msg = validate_required_config
+    unless is_valid
+      $config = nil
+      puts "Invalid configuration file: #{msg}"
+    end
   rescue
-    nil
+    $config = nil
   end
 end
 
+load_config
+
 def compile_files
-  config = load_config
-  if config.nil?
-    puts "Cannot load the configuration file: #{CONFIG_NAME}"
+  if $config.nil?
     puts 'Compiling aborted'
     return false
   end
@@ -101,7 +118,7 @@ def compile_files
           line = File.open(fp, 'r') { |f| f.readline } rescue ''
           layout_md = /^#{oc}\s*layout\s*:\s*(\S*)\s*#{cc}$/i.match(line.strip)
           if layout_md.nil?
-            Tilt.new(fp).render(self, :v => config)
+            Tilt.new(fp).render(self, :config => $config)
           else
             layout_pth = File.join(LAYOUTS_PTH, layout_md[1])
             if File.exist?(layout_pth)
@@ -111,13 +128,13 @@ def compile_files
               tmp_file.write(out_lines.join(''))
               tmp_file_pth = tmp_file.path
               tmp_file.close
-              out_cntn = Tilt.new(layout_pth).render(self, :v => config) {
-                Tilt.new(tmp_file_pth).render(self, :v => config)
+              out_cntn = Tilt.new(layout_pth).render(self, :config => $config) {
+                Tilt.new(tmp_file_pth).render(self, :config => $config)
               }
               tmp_file.unlink
               out_cntn # return
             else
-              Tilt.new(fp).render(self, :v => config)
+              Tilt.new(fp).render(self, :config => $config)
             end
           end
         end
