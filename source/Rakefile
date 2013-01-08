@@ -23,6 +23,7 @@ Erector::Widget.prettyprint_default = true
 
 $:.push(File.dirname(__FILE__))
 
+TEST_SERVER_PORT = 4094
 
 HELPERS_NAME = 'helpers'
 MARKUP_NAME = 'markup'
@@ -31,6 +32,7 @@ LAYOUTS_NAME = 'layouts'
 SCRIPTS_NAME = 'scripts'
 STYLES_NAME = 'styles'
 IMAGES_NAME = 'images'
+UPLOADS_NAME = 'uploads'
 CONFIG_NAME = 'config.yml'
 
 ROOT_PTH = Pathname.new File.dirname(__FILE__)
@@ -42,6 +44,7 @@ LAYOUTS_PTH = MARKUP_PTH.join(LAYOUTS_NAME)
 SCRIPTS_PTH = ROOT_PTH.join(SCRIPTS_NAME)
 STYLES_PTH = ROOT_PTH.join(STYLES_NAME)
 IMAGES_PTH = ROOT_PTH.join(IMAGES_NAME)
+UPLOADS_PTH = ROOT_PTH.join(UPLOADS_NAME)
 
 # Load the helpers
 Dir.glob(HELPERS_PTH.join('*.rb')) { |fp| require fp }
@@ -65,13 +68,16 @@ def load_config
       :scripts_name => SCRIPTS_NAME,
       :styles_name => STYLES_NAME,
       :images_name => IMAGES_NAME,
+      :uploads_name => UPLOADS_NAME,
       :root_pth => ROOT_PTH,
+      :out_pth => OUT_PTH,
       :markup_pth => MARKUP_PTH,
       :partials_pth => PARTIALS_PTH,
       :layouts_pth => LAYOUTS_PTH,
       :scripts_pth => SCRIPTS_PTH,
       :styles_pth => STYLES_PTH,
-      :images_pth => IMAGES_PTH
+      :images_pth => IMAGES_PTH,
+      :uploads_pth => UPLOADS_PTH
     })
 
     $config = symbolize($config)
@@ -83,12 +89,16 @@ def load_config
       $config[:description] = $config[:project_desc]
     end
 
+    fix_index_video_config
+    fix_index_slideshow_config
+
     is_valid, msg = validate_required_config
     unless is_valid
       $config = nil
       puts "Invalid configuration file: #{msg}"
     end
-  rescue
+  rescue Exception => exc
+    puts "Error while loading config: #{exc.message}"
     $config = nil
   end
 end
@@ -174,7 +184,7 @@ def compile_files
       :out_ext => lambda { |ext| '.js' },
       :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
     },
-    { :regex => /^.+(\.(?:png|svg|jpeg|jpg|gif|eot|ttf|woff))$/,
+    { :regex => /^.+(\.(?:png|svg|jpeg|jpg|gif|mp4|eot|ttf|woff))$/,
       :out_ext => lambda { |ext| ext },
       :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
     }
@@ -207,18 +217,63 @@ def compile_files
   end
 end
 
+def compile_test_server
+  test_server_code = <<-EOSINATRA
+require 'sinatra/base'
+
+# The output directory
+$root = ::File.dirname(__FILE__)
+
+class SinatraStaticServer < Sinatra::Base
+
+  get(/.+/) do
+    send_sinatra_file(request.path) { 404 }
+  end
+
+  not_found do
+    send_sinatra_file('404.html') { "Sorry, I cannot find \#{request.path}" }
+  end
+
+  def send_sinatra_file(path, &missing_file_block)
+    file_path = File.join($root, path)
+    file_path = File.join(file_path, 'index.html') unless file_path =~ /\.[a-z0-9]+$/i
+    File.exist?(file_path) ? send_file(file_path) : missing_file_block.call
+  end
+
+end
+
+run SinatraStaticServer
+EOSINATRA
+
+  config_ru_pth = OUT_PTH.join('config.ru')
+
+  File.open(config_ru_pth, 'w') { |f| f.write(test_server_code) }
+end
+
 # }
 
 # { Tasks
 
 desc 'Preview the website'
-task :preview => :compile do
-  system "xdg-open #{OUT_PTH.join('index.html')}"
+task :preview do
+  config_ru_pth = OUT_PTH.join('config.ru')
+  Dir.chdir(File.dirname(config_ru_pth)) do
+    rerun_pid = Process.spawn("rerun -- rackup --port #{TEST_SERVER_PORT} config.ru")
+
+    trap('INT') {
+      [rerun_pid].each { |pid| Process.kill(9, pid) rescue Errno::ESRCH }
+      exit 0
+    }
+    [rerun_pid].each { |pid| Process.wait(pid) }
+  end
 end
 
 desc 'Compile the sources'
 task :compile => :cleanup do
   status = compile_files
+  if status
+    compile_test_server
+  end
   puts "#{status ? 'Successfully compiled' : 'Failed to compile'} the sources"
 end
 

@@ -9,6 +9,10 @@ gem 'rest-client', :require => 'rest_client'
 gem 'tilt' # used to compile the markup
 gem 'erector' # typically used in helpers
 
+gem 'sinatra'
+gem 'rerun'
+gem 'rb-inotify', '~> 0.8.8'
+
 group :markup do
   gem 'RedCloth', :require => 'redcloth'
   gem 'haml'
