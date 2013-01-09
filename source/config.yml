@@ -2,6 +2,7 @@ title: Projr Official Website
 description: Main reference for Projr
 author:
   name: Alessandro Molari
+url: 'http://molarialessandro.info/asd'
 
 nav: # to disable the top navigation bar remove this entry
   elems: # to disable the links in the navbar remove this entry
@@ -22,11 +23,11 @@ nav: # to disable the top navigation bar remove this entry
       category: Legal
       weight: 8
     - title: TAR
-      link: 'https://github.com/alem0lars/projr/tarball/master'
+      link: 'https://github.com/alem0lars/asd/tarball/master'
       category: Downloads
       weight: 4
     - title: ZIP
-      link: 'https://github.com/alem0lars/projr/zipball/master'
+      link: 'https://github.com/alem0lars/asd/zipball/master'
       category: Downloads
       weight: 4
 
@@ -49,16 +50,26 @@ index:
     type: 'video/mp4'
     skin: 'vjs-default'
 
+search: # through Tapir: to enable it you need a token from http://tapirgo.com
+  token: 'test-token' # replace it with a valid token
+
+rss:
+  files: # They will be expanded => wildcards are allowed (see Dir.glob)
+    - 'markup/pages/**'
+
 services:
   github: # or github: false
     user_name: alem0lars
-    repo_name: projr
+    repo_name: asd
     travis: true
     gemnasium: true
   masterbranch:
     user_name: alem0lars
     badge_type: prof_short # or: cv_long, prof_short, prof_long, resume_short, resume_long
+  twitter:
+    follow: alem0lars
+    share:
+      hashtag: 'asd'
 
   # TODO
   maven: false # or maven: <relative_pth_to_mvn_root_site>
-  twitter: alem0lars # or twitter: false

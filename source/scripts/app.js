@@ -45,6 +45,8 @@ requirejs([
   'nivoslider',
   'twitter',
 
+  'app/video',
+
   'app/header',
   'app/footer',
   'app/navigation',
