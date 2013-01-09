@@ -1,7 +1,13 @@
 require 'fileutils'
 require 'pathname'
 require 'ostruct'
+require 'securerandom'
+require 'uri'
+
 require 'highline/import'
+require 'atom'
+require 'awesome_print'
+require 'rest_client'
 
 require 'erubis'
 require 'haml'
@@ -15,240 +21,13 @@ require 'sass'
 require 'less'
 require 'coffee_script'
 require 'tilt'
-require 'awesome_print'
-require 'rest_client'
-require 'erector'
-include Erector::Mixin
-Erector::Widget.prettyprint_default = true
 
-$:.push(File.dirname(__FILE__))
+$:.push(File.join(File.dirname(__FILE__), 'lib'))
 
-TEST_SERVER_PORT = 4094
-
-HELPERS_NAME = 'helpers'
-MARKUP_NAME = 'markup'
-PARTIALS_NAME = 'partials'
-LAYOUTS_NAME = 'layouts'
-SCRIPTS_NAME = 'scripts'
-STYLES_NAME = 'styles'
-IMAGES_NAME = 'images'
-UPLOADS_NAME = 'uploads'
-CONFIG_NAME = 'config.yml'
-
-ROOT_PTH = Pathname.new File.dirname(__FILE__)
-OUT_PTH = ROOT_PTH.dirname
-HELPERS_PTH = ROOT_PTH.join(HELPERS_NAME)
-MARKUP_PTH = ROOT_PTH.join(MARKUP_NAME)
-PARTIALS_PTH = MARKUP_PTH.join(PARTIALS_NAME)
-LAYOUTS_PTH = MARKUP_PTH.join(LAYOUTS_NAME)
-SCRIPTS_PTH = ROOT_PTH.join(SCRIPTS_NAME)
-STYLES_PTH = ROOT_PTH.join(STYLES_NAME)
-IMAGES_PTH = ROOT_PTH.join(IMAGES_NAME)
-UPLOADS_PTH = ROOT_PTH.join(UPLOADS_NAME)
-
-# Load the helpers
-Dir.glob(HELPERS_PTH.join('*.rb')) { |fp| require fp }
+require 'projr'
 
 
 # { Support methods & classes / Helper methods
-
-def symbolize(obj)
-  return obj.inject({}) { |memo, (k,v)| memo[k.to_sym] = symbolize(v); memo } if obj.is_a? Hash
-  return obj.inject([]) { |memo, v| memo << symbolize(v); memo } if obj.is_a? Array
-  obj
-end
-
-def load_config
-  begin
-    $config = YAML::load(File.open(ROOT_PTH.join(CONFIG_NAME), 'r'))
-    $config.merge!({
-      :markup_name => MARKUP_NAME,
-      :partials_name => PARTIALS_NAME,
-      :layouts_name => LAYOUTS_NAME,
-      :scripts_name => SCRIPTS_NAME,
-      :styles_name => STYLES_NAME,
-      :images_name => IMAGES_NAME,
-      :uploads_name => UPLOADS_NAME,
-      :root_pth => ROOT_PTH,
-      :out_pth => OUT_PTH,
-      :markup_pth => MARKUP_PTH,
-      :partials_pth => PARTIALS_PTH,
-      :layouts_pth => LAYOUTS_PTH,
-      :scripts_pth => SCRIPTS_PTH,
-      :styles_pth => STYLES_PTH,
-      :images_pth => IMAGES_PTH,
-      :uploads_pth => UPLOADS_PTH
-    })
-
-    $config = symbolize($config)
-
-    unless $config.has_key?(:title)
-      $config[:title] = $config[:project_name]
-    end
-    unless $config.has_key?(:description)
-      $config[:description] = $config[:project_desc]
-    end
-
-    fix_index_video_config
-    fix_index_slideshow_config
-
-    is_valid, msg = validate_required_config
-    unless is_valid
-      $config = nil
-      puts "Invalid configuration file: #{msg}"
-    end
-  rescue Exception => exc
-    puts "Error while loading config: #{exc.message}"
-    $config = nil
-  end
-end
-
-load_config
-
-def compile_files
-  if $config.nil?
-    puts 'Compiling aborted'
-    return false
-  end
-
-  compile_data = [
-    { :regex => /^.+(\.(?:erb|rhtml|erubis|haml|liquid|markdown|mkd|md|textile))$/,
-      :out_ext => lambda { |ext| '.html' },
-      :behaviour => lambda { |md, fp|
-        # find comment tags
-        oc, cc = if /\.haml/.match(md[1]); %w(# )
-        elsif /\.liquid/.match(md[1]); %w({% %})
-        elsif /\.textile/.match(md[1]); %w(==<!-- -->==)
-        else %w(<!-- -->)
-        end
-
-        if /^#{PARTIALS_PTH}\/.+$/.match(fp) || /^#{LAYOUTS_PTH}\/.+$/.match(fp)
-          nil # skip the layouts and partials generation
-        else
-          line = File.open(fp, 'r') { |f| f.readline } rescue ''
-          layout_md = /^#{oc}\s*layout\s*:\s*(\S*)\s*#{cc}$/i.match(line.strip)
-          if layout_md.nil?
-            Tilt.new(fp).render(self, :config => $config)
-          else
-            layout_pth = File.join(LAYOUTS_PTH, layout_md[1])
-            if File.exist?(layout_pth)
-              out_lines = File.open(fp, 'r') { |f| f.readlines }
-              out_lines.delete_at(0)
-              tmp_file = Tempfile.new(['template', md[1]])
-              tmp_file.write(out_lines.join(''))
-              tmp_file_pth = tmp_file.path
-              tmp_file.close
-              out_cntn = Tilt.new(layout_pth).render(self, :config => $config) {
-                Tilt.new(tmp_file_pth).render(self, :config => $config)
-              }
-              tmp_file.unlink
-              out_cntn # return
-            else
-              Tilt.new(fp).render(self, :config => $config)
-            end
-          end
-        end
-      }
-    },
-    { :regex => /^.+(\.(?:html|xhtml|htm|xml))$/,
-      :out_ext => lambda { |ext| '.html' },
-      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
-    },
-    { :regex => /^.+(\.(?:sass|scss))$/,
-      :out_ext => lambda { |ext| '.css' },
-      :behaviour => lambda { |md, fp|
-        Dir.chdir(STYLES_PTH) do
-          Sass::Engine.new(File.open(fp, 'r') { |f| f.read }).render
-        end
-      }
-    },
-    { :regex => /^.+(\.less)$/,
-      :out_ext => lambda { |ext| '.css' },
-      :behaviour => lambda { |md, fp|
-        Dir.chdir(STYLES_PTH) do
-          Less::Parser.new.parse(File.open(fp, 'r') { |f| f.read }).to_css
-        end
-      }
-    },
-    { :regex => /^.+(\.css)$/,
-      :out_ext => lambda { |ext| '.css' },
-      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
-    },
-    { :regex => /^.+(\.(?:coffee|coffeescript))$/,
-      :out_ext => lambda { |ext| '.js' },
-      :behaviour => lambda { |md, fp|
-        CoffeeScript.compile(File.open(fp, 'r') { |f| f.read })
-      }
-    },
-    { :regex => /^.+(\.(?:js|javascript))$/,
-      :out_ext => lambda { |ext| '.js' },
-      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
-    },
-    { :regex => /^.+(\.(?:png|svg|jpeg|jpg|gif|mp4|eot|ttf|woff))$/,
-      :out_ext => lambda { |ext| ext },
-      :behaviour => lambda { |md, fp| File.open(fp, 'r') { |f| f.read } }
-    }
-  ]
-
-  Dir[ROOT_PTH.join('**', '*')].each do |file_pth|
-    out_file_pth = file_pth.sub(/^#{ROOT_PTH}/, OUT_PTH.to_s)
-
-    found = false
-    compile_data.each do |e|
-      if (md = e[:regex].match(out_file_pth)) && !found
-        found = true
-        out_file_pth.sub!(md[1], e[:out_ext].call(md[1]))
-
-        # for files under markup/pages compile them in the output root dir
-        if (md2 = /^(#{OUT_PTH})\/#{MARKUP_NAME}\/pages\/(.+)$/.match(out_file_pth))
-          out_file_pth = File.join(md2[1], md2[2])
-        end
-
-        unless
-          puts "Compiling #{file_pth} into #{out_file_pth}"
-          FileUtils.makedirs(File.dirname(out_file_pth))
-          out_file_cntn = e[:behaviour].call(md, file_pth)
-          unless out_file_cntn.nil?
-            File.open(out_file_pth, 'w') { |out_f| out_f.write(out_file_cntn) }
-          end
-        end
-      end
-    end
-  end
-end
-
-def compile_test_server
-  test_server_code = <<-EOSINATRA
-require 'sinatra/base'
-
-# The output directory
-$root = ::File.dirname(__FILE__)
-
-class SinatraStaticServer < Sinatra::Base
-
-  get(/.+/) do
-    send_sinatra_file(request.path) { 404 }
-  end
-
-  not_found do
-    send_sinatra_file('404.html') { "Sorry, I cannot find \#{request.path}" }
-  end
-
-  def send_sinatra_file(path, &missing_file_block)
-    file_path = File.join($root, path)
-    file_path = File.join(file_path, 'index.html') unless file_path =~ /\.[a-z0-9]+$/i
-    File.exist?(file_path) ? send_file(file_path) : missing_file_block.call
-  end
-
-end
-
-run SinatraStaticServer
-EOSINATRA
-
-  config_ru_pth = OUT_PTH.join('config.ru')
-
-  File.open(config_ru_pth, 'w') { |f| f.write(test_server_code) }
-end
 
 # }
 
@@ -271,9 +50,8 @@ end
 desc 'Compile the sources'
 task :compile => :cleanup do
   status = compile_files
-  if status
-    compile_test_server
-  end
+  status &&= compile_test_server
+  status &&= generate_rss
   puts "#{status ? 'Successfully compiled' : 'Failed to compile'} the sources"
 end
 

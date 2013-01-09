@@ -8,6 +8,7 @@ gem 'rest-client', :require => 'rest_client'
 
 gem 'tilt' # used to compile the markup
 gem 'erector' # typically used in helpers
+gem 'ratom' # used to generate the atom feed
 
 gem 'sinatra'
 gem 'rerun'
