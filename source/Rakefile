@@ -1,43 +1,16 @@
-require 'fileutils'
-require 'pathname'
-require 'ostruct'
-require 'securerandom'
-require 'uri'
-
-require 'highline/import'
-require 'atom'
-require 'awesome_print'
-require 'rest_client'
-
-require 'erubis'
-require 'haml'
-require 'liquid'
-require 'redcloth'
-require 'rdoc'
-require 'rdoc/markup'
-require 'rdoc/markup/to_html'
-require 'rdiscount'
-require 'sass'
-require 'less'
-require 'coffee_script'
-require 'tilt'
-
 $:.push(File.join(File.dirname(__FILE__), 'lib'))
+
+require 'fileutils'
+require 'highline/import'
 
 require 'projr'
 
 
-# { Support methods & classes / Helper methods
-
-# }
-
-# { Tasks
-
 desc 'Preview the website'
 task :preview do
-  config_ru_pth = OUT_PTH.join('config.ru')
+  config_ru_pth = $config[:out_pth].join('config.ru')
   Dir.chdir(File.dirname(config_ru_pth)) do
-    rerun_pid = Process.spawn("rerun -- rackup --port #{TEST_SERVER_PORT} config.ru")
+    rerun_pid = Process.spawn("rerun -- rackup --port #{$config[:test_server_port]} config.ru")
 
     trap('INT') {
       [rerun_pid].each { |pid| Process.kill(9, pid) rescue Errno::ESRCH }
@@ -49,16 +22,16 @@ end
 
 desc 'Compile the sources'
 task :compile => :cleanup do
-  status = compile_files
-  status &&= compile_test_server
-  status &&= generate_rss
+  status = Compilers::Files.compile
+  status &&= Compilers::TestServer.compile
+  status &&= Compilers::Rss.compile
   puts "#{status ? 'Successfully compiled' : 'Failed to compile'} the sources"
 end
 
 desc 'Cleanup the compiled website'
 task :cleanup do
-  compiled_files_pths = Dir[OUT_PTH.join('**')].delete_if do |file_pth|
-    file_pth =~ /LICENSE\.md|README\.md|#{ROOT_PTH}/
+  compiled_files_pths = Dir[$config[:out_pth].join('**')].delete_if do |file_pth|
+    file_pth =~ /LICENSE\.md|README\.md|#{$config[:root_pth]}/
   end
   unless compiled_files_pths.empty?
     if agree("Remove these files?\n[ #{compiled_files_pths.join(', ')} ]")
@@ -66,6 +39,3 @@ task :cleanup do
     end
   end
 end
-
-# }
-

@@ -60,7 +60,7 @@ rss:
 services:
   github: # or github: false
     user_name: alem0lars
-    repo_name: asd
+    repo_name: projr
     travis: true
     gemnasium: true
   masterbranch:
@@ -69,7 +69,7 @@ services:
   twitter:
     follow: alem0lars
     share:
-      hashtag: 'asd'
+      hashtag: 'projr'
 
   # TODO
   maven: false # or maven: <relative_pth_to_mvn_root_site>
