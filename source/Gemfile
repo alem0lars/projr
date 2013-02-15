@@ -28,6 +28,6 @@ group :styles do
 end
 
 group :scripts do
-  gem 'therubyracer'
+  gem 'therubyracer', :require => 'v8', :platforms => :ruby
   gem 'coffee-script'
 end

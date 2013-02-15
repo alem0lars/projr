@@ -40,4 +40,3 @@ task :cleanup do
     end
   end
 end
-
