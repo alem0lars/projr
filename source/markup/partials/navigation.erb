@@ -1,0 +1,49 @@
+<% if Validators::Partials::Navigation.validate_navigation_config.success? %>
+  <%# config[:nav][:elems] is optional: if not present start with empty %>
+  <% nav_elems = config[:nav].has_key?(:elems) ? config[:nav][:elems].dup : [] %>
+
+  <div id="nav" class="navbar navbar-fixed-top navbar-inverse">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+
+        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <% 3.times do %>
+            <span class="icon-bar"></span>
+          <% end %>
+        </a>
+
+        <a class="brand"><%= config[:title] %></a>
+
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+
+            <%= Helpers::Partials::Navigation::NavElemStandalone.new(:link => 'index.html', :title => 'Home').to_html %>
+
+            <% if Validators::Services::Github.validate_github_config.success? %>
+              <% nav_elems << { :title => 'Wiki', :link => "#{Helpers::Services::Github.github_link}/wiki", :weight => 32, :category => 'Informations' } %>
+              <% nav_elems << { :title => 'Source code', :link => Helpers::Services::Github.github_link, :weight => 6, :category => 'Developers' } %>
+              <% nav_elems << { :title => 'Issues', :link => "#{Helpers::Services::Github.github_link}/issues", :weight => 6, :category => 'Developers' } %>
+            <% end %>
+
+            <% unless nav_elems.empty? %>
+              <%= Helpers::Partials::Navigation.navigation_dropdown(nav_elems) %>
+            <% end %>
+
+          </ul>
+
+          <% if Validators::Search.validate_search_config.success? %>
+            <form class="navbar-search pull-right">
+              <input type="text" class="search-query" placeholder="Search">
+            </form>
+          <% end %>
+
+          <% if Validators::Services::Twitter.validate_twitter_share_config.success? %>
+            <div class="navbar-twitter-share pull-right"><%= Helpers::Services::Twitter.share_badge_from_config.to_html %></div>
+          <% end %>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,38 @@
+<!-- Layout: default.erb -->
+
+<p>What's inside the markup/pages directory in deployment goes in the website
+  root path so if you have markup/pages/mypage.erb you want to refer to it using
+  mypage.html
+</p>
+
+<p>A file to use a template must declare it in the first line (as a comment) the
+  template name (e.g. in erb: <\!-- mytemplate.erb -->) and it will be searched
+  in the markup/layouts directory
+</p>
+
+<p>What's inside the markup/layouts or markup/partials directory will not be
+  generated as html file (it's just ignored by the generator)
+</p>
+
+<p>For the markup you can use the following languages</p>
+<ul>
+  <li>erb / erubis</li>
+  <li>haml</li>
+  <li>liquid</li>
+  <li>markdown</li>
+  <li>textile</li>
+  <li>plain html</li>
+</ul>
+
+<p>For the styles you can use the following languages</p>
+<ul>
+  <li>sass</li>
+  <li>less</li>
+  <li>plain css</li>
+</ul>
+
+<p>For the scripts you can use the following languages</p>
+<ul>
+  <li>coffeescript</li>
+  <li>plain javascript</li>
+</ul>

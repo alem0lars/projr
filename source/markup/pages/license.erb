@@ -1,0 +1,8 @@
+<!-- Layout: default.erb -->
+
+<% if Validators::License.validate_license_config.success? %>
+  <h1>This project is covered by the following license</h1>
+  <div id="license-wrp">
+    <%= Helpers::License.license_from_config %>
+  </div>
+<% end %>

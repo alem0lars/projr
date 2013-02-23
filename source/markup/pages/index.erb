@@ -1,0 +1,29 @@
+<!-- Layout: default.erb -->
+
+<div class="hero-unit">
+
+  <h1><%= config[:project_name] %></h1>
+
+  <p><%= config[:project_desc] %></p>
+
+  <% if Validators::Pages::Index.validate_index_main_button_config.success? %>
+    <p>
+      <a href="<%= config[:index][:main_button][:link] %>" class="btn btn-primary btn-large">
+        <%= config[:index][:main_button][:name] %>
+      </a>
+    </p>
+  <% end %>
+
+  <% if Validators::Services.validate_services_config.success? %>
+    <ul class="thumbnails">
+      <% if Validators::Pages::Index.validate_index_video_config.success? %>
+        <%= Helpers::Pages::Index.index_video_thumbnail %>
+      <% end %>
+      <% if Validators::Pages::Index.validate_index_slideshow_config.success? %>
+        <%= Helpers::Pages::Index.index_slideshow_thumbnail %>
+      <% end %>
+      <%= Helpers::Services.services_thumbnails %>
+    </ul>
+  <% end %>
+
+</div>

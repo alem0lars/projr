@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>
+<html class="en lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="en lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="en lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="en"> <!--<![endif]-->
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title><%= $config[:title] %></title>
+
+  <meta name="author" content="<%= $config[:author][:name] %>">
+  <meta name="description" content="<%= $config[:description] %>">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <script data-main="<%= $config[:scripts_name] %>/app.js" src="<%= $config[:scripts_name] %>/lib/require.js"></script>
+
+  <link rel="stylesheet" href="<%= $config[:styles_name] %>/app.css">
+
+  <link rel="shortcut icon" href="<%= $config[:images_name] %>/app/icons/favicon.ico">
+
+  <% if $config[:images_pth].join('app', 'icons', 'apple-touch-icon.png').exist? %>
+    <link rel="apple-touch-icon" href="<%= $config[:images_name] %>/app/icons/apple-touch-icon.png">
+  <% end %>
+  <% if $config[:images_pth].join('app', 'icons', 'apple-touch-icon-72x72.png').exist? %>
+    <link rel="apple-touch-icon" href="<%= $config[:images_name] %>/app/icons/apple-touch-icon-72x72.png">
+  <% end %>
+  <% if $config[:images_pth].join('app', 'icons', 'apple-touch-icon-114x114.png').exist? %>
+    <link rel="apple-touch-icon" href="<%= $config[:images_name] %>/app/icons/apple-touch-icon-114x114.png">
+  <% end %>
+
+</head>
+
+<body>
+
+<!--[if lt IE 7]>
+<p class="chromeframe">
+  You are using an <strong>outdated</strong> browser.
+  Please <a href="http://browsehappy.com/">upgrade your browser</a> or
+  <a href="http://www.google.com/chromeframe/?redirect=true">activate Google
+    Chrome Frame</a>
+  to improve your experience.</p>
+<![endif]-->
+
+
+<div id="container-wrp">
+  <div id="container" class="container-fluid">
+    <%= Helpers::Partials.render($config[:partials_pth].join('navigation.erb')) %>
+
+    <header class="header-wrp row-fluid">
+      <%= Helpers::Partials.render($config[:partials_pth].join('header.erb')) %>
+    </header>
+
+    <div id="main-wrp row-fluid">
+      <%= yield %>
+    </div>
+
+  </div>
+  <div id="push"></div>
+
+</div>
+
+<footer id="footer-wrp row-fluid">
+  <%= Helpers::Partials.render($config[:partials_pth].join('footer.erb')) %>
+</footer>
+
+</body>
+
+</html>
