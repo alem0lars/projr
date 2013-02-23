@@ -4,6 +4,8 @@ gem 'rake'
 gem 'highline'
 gem 'awesome_print'
 
+gem 'monadic'
+
 gem 'rest-client', :require => 'rest_client'
 
 gem 'tilt' # used to compile the markup

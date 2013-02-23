@@ -24,6 +24,7 @@ GEM
     liquid (2.4.1)
     listen (0.7.2)
     mime-types (1.21)
+    monadic (0.7.4)
     multi_json (1.6.0)
     polyglot (0.3.3)
     rack (1.5.2)
@@ -66,6 +67,7 @@ DEPENDENCIES
   highline
   less
   liquid
+  monadic
   rake
   ratom
   rb-inotify (~> 0.8.8)

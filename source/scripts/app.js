@@ -12,27 +12,32 @@ requirejs.config({
     'jquery': {
       deps: [],
       exports: 'jquery',
-      init: function (jquery) { /* No function init at the moment */ }
+      init: function (jquery) { /* No function init at the moment */
+      }
     },
     'videojs': {
       deps: [],
       exports: 'videojs',
-      init: function (videojs) { /* No function init at the moment */ }
+      init: function (videojs) { /* No function init at the moment */
+      }
     },
     'bootstrap': {
       deps: ['jquery'],
       exports: 'bootstrap',
-      init: function (bootstrap) { /* No function init at the moment */ }
+      init: function (bootstrap) { /* No function init at the moment */
+      }
     },
     'nivoslider': {
       deps: ['jquery'],
       exports: 'nivoslider',
-      init: function (nivoslider) { /* No function init at the moment */ }
+      init: function (nivoslider) { /* No function init at the moment */
+      }
     },
     'twitter': {
       deps: [],
       exports: 'twitter',
-      init: function (twitter) { /* No function init at the moment */ }
+      init: function (twitter) { /* No function init at the moment */
+      }
     }
   }
 });
